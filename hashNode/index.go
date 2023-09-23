@@ -27,6 +27,10 @@ func (self *HashNode) GetKey() *KeyString {
 	return self.key
 }
 
+func (self *HashNode) UpdateValue(value interface{}) {
+	self.value = value
+}
+
 // func (self *HashNode) Next() *HashNode {
 // 	return self.next
 // }

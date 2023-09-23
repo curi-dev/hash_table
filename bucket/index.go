@@ -1,6 +1,7 @@
 package bucket
 
 import (
+	"errors"
 	"fmt"
 	"hashTable/constants"
 
@@ -9,26 +10,38 @@ import (
 
 type Bucket struct {
 	length int
+	InUse  bool
 	head   *hashnode.HashNode
 	tail   *hashnode.HashNode
 }
 
-func (self *Bucket) Insert(newNode *hashnode.HashNode) bool {
-	if self.head == nil {
+func (self *Bucket) InsertOrReplace(key string, value interface{}) error {
+	if !self.InUse {
+		newNode := hashnode.New(&hashnode.KeyString{Value: key}, value)
+
 		self.head = newNode
 		self.tail = newNode
 	} else {
-		if self.length < constants.BUCKET_SIZE {
-			self.tail.Next = newNode
-			self.tail = newNode
+
+		existentNode := self.Find(key)
+		if existentNode != nil {
+			existentNode.UpdateValue(value)
 		} else {
-			return false // only scenario where item could not be inserted
+			if self.length < constants.BUCKET_SIZE {
+				newNode := hashnode.New(&hashnode.KeyString{Value: key}, value)
+
+				self.tail.Next = newNode
+				self.tail = newNode
+			} else {
+				return errors.New("No memory avaiable in the bucket")
+			}
 		}
 	}
 
 	self.length++
 
-	return true
+	self.InUse = true
+	return nil
 }
 
 func (self *Bucket) Find(key string) *hashnode.HashNode {
@@ -62,7 +75,5 @@ func (self *Bucket) Print(bucketNumber int) {
 		currNode = currNode.Next
 
 		nodeNumber++
-
 	}
-
 }
